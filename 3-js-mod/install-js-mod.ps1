@@ -1,6 +1,6 @@
-﻿# Pixel Hollow Knight [Animated] - Vivaldi JS mod kurulumu
-# hk-tab-animations.js dosyasını Vivaldi'ye ekler. Vivaldi her güncellendiğinde yeniden çalıştırın.
-# Kaldırmak için: .\install-js-mod.ps1 -Uninstall
+﻿# Pixel Hollow Knight [Animated] - Vivaldi JS mod installer
+# Adds hk-tab-animations.js to Vivaldi. Run it again after every Vivaldi update.
+# To remove it: .\install-js-mod.ps1 -Uninstall
 
 param([switch]$Uninstall)
 
@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $modName = 'hk-tab-animations.js'
 $modSource = Join-Path $PSScriptRoot $modName
 $scriptTag = "<script src=`"$modName`"></script>"
-# Önceki sürümün dosya adı
+# File name used by the previous version
 $legacyName = 'hk-tab-close.js'
 $legacyTag = "<script src=`"$legacyName`"></script>"
 
@@ -29,11 +29,11 @@ $targets = foreach ($root in $roots) {
 }
 
 if (-not $targets) {
-  Write-Error 'Vivaldi kurulumu bulunamadı.'
+  Write-Error 'No Vivaldi installation found.'
 }
 
 if (Get-Process vivaldi -ErrorAction SilentlyContinue) {
-  Write-Warning 'Vivaldi açık. Değişikliklerin etkili olması için Vivaldi''yi kapatıp yeniden açın.'
+  Write-Warning 'Vivaldi is running. Close and reopen Vivaldi for the changes to take effect.'
 }
 
 foreach ($dir in $targets) {
@@ -45,7 +45,7 @@ foreach ($dir in $targets) {
     $content = Remove-Tag $content $scriptTag
     Set-Content $html $content -NoNewline
     Remove-Item (Join-Path $dir $modName) -ErrorAction SilentlyContinue
-    Write-Host "Kaldırıldı: $dir"
+    Write-Host "Removed: $dir"
     continue
   }
 
@@ -60,5 +60,5 @@ foreach ($dir in $targets) {
     $content = $content -replace '</body>', "  $scriptTag`n</body>"
   }
   Set-Content $html $content -NoNewline
-  Write-Host "Kuruldu: $dir"
+  Write-Host "Installed: $dir"
 }

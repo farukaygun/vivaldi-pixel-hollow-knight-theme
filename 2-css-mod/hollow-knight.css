@@ -1,10 +1,10 @@
 /*
  * Pixel Hollow Knight [Animated] - Vivaldi UI mod
- * Firefox temasındaki gibi animasyonlu görseli pencerenin sağ üst köşesine
- * orijinal boyutunda yerleştirir; sekme, adres ve yer imi çubuklarını şeffaf yapar.
+ * Places the animated artwork in the top-right corner of the window at its
+ * original size, like the Firefox theme; makes the tab, address and bookmark bars transparent.
  */
 
-/* Firefox: theme_frame (sağ üst, tekrar yok) + frame rengi */
+/* Firefox: theme_frame (top right, no repeat) + frame colour */
 #browser {
   background:
     linear-gradient(to right, #10243D, rgba(16, 36, 61, 0.6) 60px, rgba(16, 36, 61, 0) 220px) right top / 404px 130px no-repeat,
@@ -12,7 +12,7 @@
     #10243D !important;
 }
 
-/* Firefox: toolbar rgba(0, 0, 0, 0) - görselin önündeki tüm çubuklar şeffaf */
+/* Firefox: toolbar rgba(0, 0, 0, 0) - every bar in front of the artwork is transparent */
 #browser #header,
 #browser .tabbar-wrapper,
 #browser #tabs-tabbar-container,
@@ -27,12 +27,12 @@
   border-color: transparent !important;
 }
 
-/* Sayfa alanı ve paneller şeffaf olmasın; görsel yalnızca başlık bölgesinde görünsün */
+/* Keep the page area and panels opaque; the artwork shows only in the header area */
 #browser #main > .inner {
   background-color: #090910 !important;
 }
 
-/* Sekmeler: arka plan şeffaf, metin rgba(255, 255, 255, 0.9) */
+/* Tabs: transparent background, text rgba(255, 255, 255, 0.9) */
 #browser .tab-position .tab,
 #browser .tab-position .tab:hover,
 #browser .tab-position .tab.active {
@@ -40,12 +40,12 @@
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Firefox: tab_line - etkin sekmenin üstündeki mavi çizgi */
+/* Firefox: tab_line - blue line above the active tab */
 #browser .tab-position .tab.active {
   box-shadow: inset 0 2px 0 rgba(99, 182, 255, 0.81) !important;
 }
 
-/* Firefox: toolbar_field şeffaf, toolbar_field_text rgba(255, 255, 255, 0.85) */
+/* Firefox: toolbar_field transparent, toolbar_field_text rgba(255, 255, 255, 0.85) */
 #browser .UrlBar-AddressField,
 #browser .UrlBar-SearchField,
 #browser .SearchField {
@@ -54,7 +54,7 @@
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
-/* Adres çubuğu: daha dar, araç çubuğunda ortalı */
+/* Address bar: narrower and centred in the toolbar */
 #browser .UrlBar-AddressField {
   max-width: 1280px !important;
   margin-inline: auto !important;
@@ -72,7 +72,7 @@
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Yer imi çubuğu: Vivaldi'nin 29px yüksekliğinden 2px fazla */
+/* Bookmark bar: 2px taller than Vivaldi's 29px */
 #browser .bookmark-bar {
   height: 31px;
 }
@@ -81,7 +81,7 @@
   height: auto;
 }
 
-/* Yer imleri: çerçevesiz ve şeffaf; üzerine gelince oval arka plan */
+/* Bookmarks: borderless and transparent; pill-shaped background on hover */
 #browser .bookmark-bar button {
   background: transparent !important;
   border: none !important;
@@ -96,9 +96,9 @@
   background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Başlangıç sayfası: Pano widget'larını ekranın en altına yerleştir.
- * Hızlı arama ve widget'lar arasındaki boşluğu dolduran bir sütun kurulur;
- * widget bloğu margin-top: auto ile alta itilir. */
+/* Start Page: place the Dashboard widgets at the bottom of the screen.
+ * A column fills the space between the search field and the widgets;
+ * margin-top: auto pushes the widget block to the bottom. */
 #browser .sdwrapper.has-SpeedDial .SpeedDialView {
   display: flex;
   flex-direction: column;

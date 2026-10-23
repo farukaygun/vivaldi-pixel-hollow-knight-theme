@@ -1,15 +1,15 @@
 /*
  * Pixel Hollow Knight [Animated] - Vivaldi JS mod
- * Sekme açılış ve kapanış animasyonu: Chrome/Edge gibi açılan sekme büyüyerek,
- * kapanan sekme daralarak gelir/gider; arkasındaki sekmeler onunla birlikte kayar.
- * Vivaldi kapanan sekmeyi DOM'dan anında siler; bu mod silinen sekmenin bir
- * kopyasını aynı yere koyar, daraltıp soldurur ve ardından kaldırır.
+ * Tab open and close animation: like Chrome/Edge, a new tab grows in and a
+ * closed tab shrinks away; the tabs after it slide along with it.
+ * Vivaldi removes a closed tab from the DOM immediately; this mod puts a copy
+ * of the removed tab in its place, shrinks and fades it, then removes it.
  */
 (() => {
   const DURATION = 200;
-  // Tek seferde bundan fazla sekme eklenir/silinirse (açılış, çalışma alanı değişimi vb.) animasyon yok
+  // No animation when more tabs than this are added/removed at once (startup, workspace switch etc.)
   const MAX_BATCH = 3;
-  // Sekmenin gerçekten kapandığının (tabs.onRemoved) beklenme süresi
+  // How long to wait for confirmation that the tab really closed (tabs.onRemoved)
   const CONFIRM_TIMEOUT = 400;
   const MAX_LIFETIME = 1000;
 
@@ -27,10 +27,10 @@
   `;
   document.head.appendChild(style);
 
-  // Şimdiye kadar sekme şeridinde görülen sekmeler; görülmemiş olan yeni açılmıştır
+  // Tabs seen in the tab strip so far; an unseen tab has just been opened
   const knownTabs = new Set();
 
-  // tabs.onRemoved, DOM'dan silinmeden önce ya da sonra gelebilir
+  // tabs.onRemoved may fire before or after the tab leaves the DOM
   const removedTabs = new Map();
   const waiters = new Map();
 
@@ -79,7 +79,7 @@
   const readPos = (el, axis) => parseFloat(el.style.getPropertyValue(axis.pos)) || 0;
   const readSize = (el, axis) => parseFloat(el.style.getPropertyValue(axis.sizeVar)) || 0;
 
-  // Yan yana iki sekme arasındaki boşluk
+  // Gap between two adjacent tabs
   function estimateGap(positions, axis) {
     for (let i = 0; i + 1 < positions.length; i++) {
       const gap = readPos(positions[i + 1], axis) - readPos(positions[i], axis) - readSize(positions[i], axis);
@@ -89,11 +89,11 @@
   }
 
   /*
-   * position: canlandırılacak .tab-position; container: sekmelerin bulunduğu öğe
-   * from/to: başlangıç ve bitiş boyutu (kapanış: tam → 0, açılış: 0 → tam)
-   * Arkadaki ilk sekme Vivaldi'nin yay animasyonuyla kayıyorsa boyut onu takip eder (follow);
-   * Vivaldi sekmeleri yerine atlattıysa onları kendimiz kaydırırız (push);
-   * arkada sekme yoksa kendi süremizle canlandırırız (timed).
+   * position: the .tab-position to animate; container: the element holding the tabs
+   * from/to: start and end size (close: full → 0, open: 0 → full)
+   * If the next tab slides with Vivaldi's spring animation, the size follows it (follow);
+   * if Vivaldi jumped the tabs into place, we slide them ourselves (push);
+   * if there is no tab after it, we animate on our own timer (timed).
    */
   function animateTab({ position, container, from, to, fullSize, gap: knownGap, onFinish }) {
     const axis = axisOf(container.closest('.tab-strip'));
@@ -107,8 +107,8 @@
     const neighborPos = neighbor ? readPos(neighbor, axis) : 0;
     const gap = knownGap ?? estimateGap(after, axis);
 
-    // Kapanışta komşu henüz eski yerinde (sekmenin arkasında), açılışta yeni sekmenin üstünde duruyorsa
-    // Vivaldi onu yay animasyonuyla kaydıracak demektir
+    // If the neighbour is still in its old place (behind the tab) on close, or on top of the new tab on open,
+    // Vivaldi is about to slide it with its spring animation
     let mode = 'timed';
     if (neighbor) {
       const neighborWaiting = closing
@@ -157,7 +157,7 @@
 
         if (Math.abs(size - to) <= 0.5) return finish();
         if ((moved && delta <= 0.5) || (!moved && now - start > 100)) {
-          // Komşu durdu (ya da hiç kıpırdamadı): kalan kısmı kendi süremizle bitir
+          // The neighbour stopped (or never moved): finish the rest on our own timer
           mode = 'timed';
           start = now;
           startSize = moved ? Math.max(0, Math.min(fullSize, size)) : startSize;
@@ -175,7 +175,7 @@
       requestAnimationFrame(frame);
     }
 
-    // İlk kare boyanmadan önce başlangıç durumunu uygula
+    // Apply the initial state before the first frame is painted
     setSize(from);
     if (mode === 'push') setOffset(from);
     requestAnimationFrame(frame);
@@ -202,7 +202,7 @@
       ghost.remove();
       return;
     }
-    // Yerine kayan sekmeler kopyanın üstünde kalsın
+    // Keep the tabs sliding into its place above the copy
     position.style.zIndex = '0';
 
     const axis = axisOf(record.target.closest('.tab-strip'));
@@ -212,7 +212,7 @@
       return;
     }
 
-    // Komşu henüz eski yerindeyse aradaki boşluk kesin olarak bilinir
+    // While the neighbour is still in its old place, the gap is known exactly
     const pos = readPos(position, axis);
     const next2 = [...record.target.querySelectorAll('.tab-position')]
       .filter((el) => !el.closest('.hk-tab-closing') && readPos(el, axis) >= pos - 1)
@@ -229,7 +229,7 @@
       onFinish: () => ghost.remove(),
     });
 
-    // Sekme kapanmadıysa (başka pencereye/yığına taşındı vb.) kopyayı kaldır
+    // If the tab did not close (moved to another window/stack etc.), remove the copy
     wasClosed(tabId).then((closed) => {
       if (!closed) animation.cancel();
     });
@@ -240,7 +240,7 @@
     if (!position || position.classList.contains('is-pinned')) return;
 
     const axis = axisOf(record.target.closest('.tab-strip'));
-    // Vivaldi yeni sekmeyi 0 genişlikle başlatabilir; o zaman tam boyutu başka bir sekmeden al
+    // Vivaldi may start a new tab at zero width; then take the full size from another tab
     let fullSize = readSize(position, axis);
     if (fullSize < 2) {
       const sibling = [...record.target.querySelectorAll('.tab-position:not(.is-pinned)')]
@@ -260,7 +260,7 @@
       if (!record.target.closest?.('.tab-strip')) continue;
 
       for (const node of record.removedNodes) {
-        // React'in yer değiştirdiği (yeniden eklenen) düğümler kapanmış sayılmaz
+        // Nodes React only moved (re-inserted) do not count as closed
         if (node.nodeType !== Node.ELEMENT_NODE || node.isConnected) continue;
         if (node.classList.contains('hk-tab-closing')) continue;
         const tabId = tabIdOf(node);
